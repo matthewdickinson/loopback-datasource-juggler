@@ -16,7 +16,7 @@ module.exports = function(dataSourceFactory, connectorCapabilities) {
         if (err) return done(err);
         CacheItem.get('a-key', function(err, value) {
           if (err) return done(err);
-          value.should.equal('a-value');
+          should.equal(value, 'a-value');
           done();
         });
       });
@@ -25,7 +25,7 @@ module.exports = function(dataSourceFactory, connectorCapabilities) {
     it('works for string values - Promise API', function() {
       return CacheItem.set('a-key', 'a-value')
         .then(function() { return CacheItem.get('a-key'); })
-        .then(function(value) { value.should.equal('a-value'); });
+        .then(function(value) { should.equal(value, 'a-value'); });
     });
 
     it('works for Object values', function() {
@@ -40,16 +40,16 @@ module.exports = function(dataSourceFactory, connectorCapabilities) {
         .then(function(value) { value.should.eql(new Buffer([1, 2, 3])); });
     });
 
+    it('honours options.ttl', function() {
+      return CacheItem.set('a-key', 'a-value', { ttl: 10 })
+      .delay(20)
+      .then(function() { return CacheItem.get('a-key'); })
+      .then(function(value) { should.equal(value, null); });
+    });
+
     describe('get', function() {
       it('returns "null" when key does not exist', function() {
         return CacheItem.get('key-does-not-exist')
-          .then(function(value) { should.equal(value, null); });
-      });
-
-      it('honours options.ttl', function() {
-        return CacheItem.set('a-key', 'a-value', { ttl: 10 })
-          .delay(20)
-          .then(function() { return CacheItem.get('a-key'); })
           .then(function(value) { should.equal(value, null); });
       });
 
@@ -58,6 +58,18 @@ module.exports = function(dataSourceFactory, connectorCapabilities) {
           .delay(20)
           .then(function() { return CacheItem.get('a-key'); })
           .then(function(value) { should.equal(value, null); });
+      });
+    });
+
+    describe('set', function() {
+      it('resets TTL timer', function() {
+        return CacheItem.set('a-key', 'a-value', { ttl: 10 })
+          .then(function() {
+            return CacheItem.set('a-key', 'another-value'); // no TTL
+          })
+          .delay(20)
+          .then(function() { return CacheItem.get('a-key'); })
+          .then(function(value) { should.equal(value, 'another-value'); });
       });
     });
   });

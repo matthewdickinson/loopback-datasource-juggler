@@ -40,6 +40,33 @@ module.exports = function(dataSourceFactory, connectorCapabilities) {
         .then(function(value) { value.should.eql(new Buffer([1, 2, 3])); });
     });
 
+    it('works for Date values', function() {
+      return CacheItem.set('a-key', new Date('2016-08-03T11:53:03.470Z'))
+        .then(function() { return CacheItem.get('a-key'); })
+        .then(function(value) {
+          value.should.be.instanceOf(Date);
+          value.toISOString().should.equal('2016-08-03T11:53:03.470Z');
+        });
+    });
+
+    it('works for Number values - integers', function() {
+      return CacheItem.set('a-key', 12345)
+        .then(function() { return CacheItem.get('a-key'); })
+        .then(function(value) { value.should.equal(12345); });
+    });
+
+    it('works for Number values - floats', function() {
+      return CacheItem.set('a-key', 12.345)
+        .then(function() { return CacheItem.get('a-key'); })
+        .then(function(value) { value.should.equal(12.345); });
+    });
+
+    it('works for Boolean values', function() {
+      return CacheItem.set('a-key', false)
+        .then(function() { return CacheItem.get('a-key'); })
+        .then(function(value) { value.should.equal(false); });
+    });
+
     it('honours options.ttl', function() {
       return CacheItem.set('a-key', 'a-value', { ttl: 10 })
       .delay(20)
